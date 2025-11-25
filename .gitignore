@@ -1,0 +1,42 @@
+# === Archivos de Python ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+
+# === Virtualenv ===
+venv/
+.env/
+.env.bak/
+*.env
+
+# === Configuración de IDE ===
+.vscode/
+.idea/
+
+# === Archivos temporales ===
+*.log
+*.tmp
+*.temp
+
+# === Archivos de sistema ===
+.DS_Store
+Thumbs.db
+
+# === Archivos de pruebas ===
+*.coverage
+.coverage.*
+.pytest_cache/
+.cache/
+
+# === Archivos de empaquetado ===
+*.egg-info/
+dist/
+build/
+
+# === Carpeta de descargas o pruebas ===
+salidas/
+configs/
+plantillas/
+*.bat
