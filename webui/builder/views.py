@@ -10,6 +10,8 @@ from django.http import FileResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.conf import settings
+from pathlib import Path
 
 # 👉 AÑADIMOS LA RAÍZ DEL REPO AL PYTHONPATH
 # BASE_DIR = carpeta "webui" (donde está manage.py)
@@ -68,28 +70,18 @@ def index(request):
 
     word_base_default = REPO_ROOT / "Plantillas" / "1839 - Informe parcial .docx"
     word_mapping_default = REPO_ROOT / "configs" / "1839_mapping.json"
-    word_out_default = Path(
-        r"C:\Users\ctorresb\OneDrive - Direccion de Impuestos y Aduanas Nacionales de Colombia\CASOS\ACTIVOS\ITAU COLOMBIA S A\ITAU COLOMBIA S A 2020\R - 2020\Auditoria\F1839 - Informe parcial.docx"
-    )
 
     excel_base_default = REPO_ROOT / "Plantillas" / "1811 - VERIFICACION REQUISITOS FORMALES.xlsx"
     excel_mapping_default = REPO_ROOT / "configs" / "1811_mapping.json"
-    excel_out_default = Path(
-        r"C:\Users\ctorresb\OneDrive - Direccion de Impuestos y Aduanas Nacionales de Colombia\CASOS\ACTIVOS\BANCO SERFINANZA S.A\R - 2024\Auditoria\F1811.xlsx"
-    )
 
     context = {
         "word_base_default": str(word_base_default.relative_to(REPO_ROOT)),
         "word_mapping_default": str(word_mapping_default),
-        "word_out_default": str(word_out_default),
+        "word_out_name_default": "F1839 - Informe parcial.docx",
 
         "excel_base_default": str(excel_base_default.relative_to(REPO_ROOT)),
         "excel_mapping_default": str(excel_mapping_default),
-        "excel_out_default": str(excel_out_default),
-
-        # 👇 JSONs empiezan vacíos; el usuario carga archivo y se llena el textarea
-        "word_json_default": "",
-        "excel_json_default": "",
+        "excel_out_name_default": "F1811.xlsx",
 
         "word_templates": [
             {"value": str(p.relative_to(REPO_ROOT)), "name": p.name}
@@ -99,6 +91,9 @@ def index(request):
             {"value": str(p.relative_to(REPO_ROOT)), "name": p.name}
             for p in excel_files
         ],
+
+        "word_json_default": "",
+        "excel_json_default": "",
     }
     return render(request, "builder/index.html", context)
 
@@ -110,7 +105,15 @@ def run_word_view(request):
 
     base_docx = resolve_path(request.POST.get("word_base"), REPO_ROOT)
     mapping_file = resolve_path(request.POST.get("word_mapping"), REPO_ROOT)
-    output_docx = resolve_path(request.POST.get("word_out"), None)
+
+    out_name = request.POST.get("word_out_name", "").strip()
+    if not out_name:
+        return HttpResponse("Debes indicar el nombre del archivo Word de salida.", status=400)
+
+    # Carpeta interna donde se generan los Word
+    outputs_dir = Path(settings.MEDIA_ROOT) / "word_outputs"
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+    output_docx = outputs_dir / out_name
 
     json_text = request.POST.get("word_json_text", "").strip()
     if not json_text:
@@ -128,11 +131,11 @@ def run_word_view(request):
         str(output_docx),
     )
 
-    if Path(output_docx).exists():
+    if output_docx.exists():
         return FileResponse(
             open(output_docx, "rb"),
             as_attachment=True,
-            filename=Path(output_docx).name,
+            filename=output_docx.name,
         )
 
     return HttpResponse("Se ejecutó la generación, pero no se encontró el archivo de salida.")
@@ -144,7 +147,14 @@ def run_excel_view(request):
 
     base_excel = resolve_path(request.POST.get("excel_base"), REPO_ROOT)
     mapping_file = resolve_path(request.POST.get("excel_mapping"), REPO_ROOT)
-    output_excel = resolve_path(request.POST.get("excel_out"), None)
+
+    out_name = request.POST.get("excel_out_name", "").strip()
+    if not out_name:
+        return HttpResponse("Debes indicar el nombre del archivo Excel de salida.", status=400)
+
+    outputs_dir = Path(settings.MEDIA_ROOT) / "excel_outputs"
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+    output_excel = outputs_dir / out_name
 
     json_text = request.POST.get("excel_json_text", "").strip()
     if not json_text:
@@ -162,11 +172,11 @@ def run_excel_view(request):
         str(output_excel),
     )
 
-    if Path(output_excel).exists():
+    if output_excel.exists():
         return FileResponse(
             open(output_excel, "rb"),
             as_attachment=True,
-            filename=Path(output_excel).name,
+            filename=output_excel.name,
         )
 
     return HttpResponse("Se ejecutó la generación, pero no se encontró el archivo de salida.")

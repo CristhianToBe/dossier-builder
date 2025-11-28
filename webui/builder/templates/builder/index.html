@@ -9,15 +9,21 @@
         label { display: block; margin-top: 8px; }
         input[type="text"], select, textarea { width: 100%; padding: 4px; box-sizing: border-box; }
         button { margin-top: 12px; padding: 6px 12px; }
-        textarea { font-family: monospace; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 4px; font-size: 13px; }
+        th { background: #f5f5f5; text-align: left; }
+        .json-table { max-height: 280px; overflow: auto; display: block; }
+        .path-cell { width: 40%; font-family: monospace; }
+        .value-cell input { width: 100%; box-sizing: border-box; }
     </style>
 </head>
 <body>
     <h1>Dossier Builder</h1>
 
+    <!-- WORD -->
     <fieldset>
         <legend><strong>Generar Word</strong></legend>
-        <form method="post" enctype="multipart/form-data" action="{% url 'run_word' %}">
+        <form id="word_form" method="post" enctype="multipart/form-data" action="{% url 'run_word' %}">
             {% csrf_token %}
 
             <label>Plantilla Word (base_docx):</label>
@@ -33,21 +39,38 @@
             <label>Mapping (mapping_json):</label>
             <input type="text" name="word_mapping" value="{{ word_mapping_default }}">
 
-            <label>Salida Word (output_docx):</label>
-            <input type="text" name="word_out" value="{{ word_out_default }}">
+            <label>Nombre archivo Word:</label>
+            <input type="text" name="word_out_name" value="{{ word_out_name_default }}">
 
-            <label>JSON de datos (selecciona archivo y edita abajo):</label>
+            <label>JSON de datos (selecciona archivo y edita campos):</label>
             <input type="file" id="word_json_file" accept=".json">
-            <textarea name="word_json_text" id="word_json_text" rows="10"
-                      placeholder="Aquí se mostrará el JSON seleccionado; puedes editarlo antes de generar.">{{ word_json_default|default:"" }}</textarea>
+
+            <!-- aquí se pintan los campos del JSON -->
+            <div class="json-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ruta (path)</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="word_json_fields">
+                        <!-- filas generadas por JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- aquí se guardará el JSON reconstruido antes de enviar -->
+            <input type="hidden" name="word_json_text" id="word_json_text_hidden">
 
             <button type="submit">Generar Word</button>
         </form>
     </fieldset>
 
+    <!-- EXCEL -->
     <fieldset>
         <legend><strong>Generar Excel</strong></legend>
-        <form method="post" enctype="multipart/form-data" action="{% url 'run_excel' %}">
+        <form id="excel_form" method="post" enctype="multipart/form-data" action="{% url 'run_excel' %}">
             {% csrf_token %}
 
             <label>Plantilla Excel (base_excel):</label>
@@ -63,24 +86,84 @@
             <label>Mapping (mapping_json):</label>
             <input type="text" name="excel_mapping" value="{{ excel_mapping_default }}">
 
-            <label>Salida Excel (output_excel):</label>
-            <input type="text" name="excel_out" value="{{ excel_out_default }}">
+            <label>Nombre archivo Excel:</label>
+            <input type="text" name="excel_out_name" value="{{ excel_out_name_default }}">
 
-            <label>JSON de datos (selecciona archivo y edita abajo):</label>
+            <label>JSON de datos (selecciona archivo y edita campos):</label>
             <input type="file" id="excel_json_file" accept=".json">
-            <textarea name="excel_json_text" id="excel_json_text" rows="10"
-                      placeholder="Aquí se mostrará el JSON seleccionado; puedes editarlo antes de generar.">{{ excel_json_default|default:"" }}</textarea>
+
+            <div class="json-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ruta (path)</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="excel_json_fields">
+                        <!-- filas generadas por JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <input type="hidden" name="excel_json_text" id="excel_json_text_hidden">
 
             <button type="submit">Generar Excel</button>
         </form>
     </fieldset>
 
     <script>
-        function setupJsonLoader(fileInputId, textareaId) {
-            const fileInput = document.getElementById(fileInputId);
-            const textarea = document.getElementById(textareaId);
-            if (!fileInput || !textarea) return;
+        // Aplana un objeto JSON en pares {path, value} usando '||' (mismo criterio que tus mappings)
+        function flattenJson(obj, prefix = "") {
+            const result = [];
+            for (const [key, val] of Object.entries(obj)) {
+                const path = prefix ? prefix + "||" + key : key;
+                if (val !== null && typeof val === "object" && !Array.isArray(val)) {
+                    result.push(...flattenJson(val, path));
+                } else {
+                    result.push({ path, value: val == null ? "" : String(val) });
+                }
+            }
+            return result;
+        }
 
+        // Reconstruye un objeto desde pares {path, value}
+        function unflattenJson(pairs) {
+            const root = {};
+            for (const { path, value } of pairs) {
+                const keys = path.split("||");
+                let cur = root;
+                for (let i = 0; i < keys.length; i++) {
+                    const k = keys[i];
+                    if (i === keys.length - 1) {
+                        // inferir tipo básico
+                        let v = value;
+                        const trimmed = (v ?? "").trim();
+                        if (trimmed === "true") v = true;
+                        else if (trimmed === "false") v = false;
+                        else if (trimmed === "null") v = null;
+                        else if (trimmed !== "" && !isNaN(trimmed)) v = Number(trimmed);
+                        cur[k] = v;
+                    } else {
+                        if (typeof cur[k] !== "object" || cur[k] === null || Array.isArray(cur[k])) {
+                            cur[k] = {};
+                        }
+                        cur = cur[k];
+                    }
+                }
+            }
+            return root;
+        }
+
+        function setupJsonEditor(prefix) {
+            const fileInput = document.getElementById(prefix + "_json_file");
+            const tbody = document.getElementById(prefix + "_json_fields");
+            const hidden = document.getElementById(prefix + "_json_text_hidden");
+            const form = document.getElementById(prefix + "_form");
+
+            if (!fileInput || !tbody || !hidden || !form) return;
+
+            // Cuando se selecciona un archivo JSON
             fileInput.addEventListener("change", function () {
                 const file = this.files[0];
                 if (!file) return;
@@ -89,29 +172,77 @@
                 reader.onload = function (e) {
                     try {
                         const raw = e.target.result;
-                        let formatted = raw;
+                        const parsed = JSON.parse(raw);
 
-                        // Intentamos formatear como JSON bonito si es válido
-                        try {
-                            const parsed = JSON.parse(raw);
-                            formatted = JSON.stringify(parsed, null, 2);
-                        } catch (err) {
-                            // Si no es JSON válido, dejamos el texto tal cual
+                        if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+                            alert("El JSON raíz debe ser un objeto (no un arreglo ni un valor simple).");
+                            return;
                         }
 
-                        textarea.value = formatted;
-                        textarea.focus();
+                        const pairs = flattenJson(parsed);
+
+                        // Limpiar tabla
+                        tbody.innerHTML = "";
+
+                        // Crear filas
+                        for (const pair of pairs) {
+                            const tr = document.createElement("tr");
+
+                            const tdPath = document.createElement("td");
+                            tdPath.className = "path-cell";
+                            tdPath.textContent = pair.path;
+
+                            const tdValue = document.createElement("td");
+                            tdValue.className = "value-cell";
+                            const input = document.createElement("input");
+                            input.type = "text";
+                            input.value = pair.value;
+                            input.dataset.path = pair.path;
+                            tdValue.appendChild(input);
+
+                            tr.appendChild(tdPath);
+                            tr.appendChild(tdValue);
+                            tbody.appendChild(tr);
+                        }
+
+                        // también guardamos el JSON original por si quieres usarlo en el futuro
+                        hidden.value = JSON.stringify(parsed, null, 2);
                     } catch (err) {
-                        alert("No se pudo leer el archivo JSON: " + err);
+                        console.error(err);
+                        alert("No se pudo leer o parsear el JSON: " + err);
                     }
                 };
                 reader.readAsText(file, "utf-8");
             });
+
+            // Antes de enviar el formulario, reconstruimos el JSON desde las filas
+            form.addEventListener("submit", function (e) {
+                const inputs = tbody.querySelectorAll("input[data-path]");
+                if (!inputs.length) {
+                    alert("No hay campos JSON cargados para " + prefix.toUpperCase() + ".");
+                    e.preventDefault();
+                    return;
+                }
+
+                const pairs = [];
+                inputs.forEach((input) => {
+                    pairs.push({ path: input.dataset.path, value: input.value });
+                });
+
+                try {
+                    const obj = unflattenJson(pairs);
+                    hidden.value = JSON.stringify(obj, null, 2);
+                } catch (err) {
+                    console.error(err);
+                    alert("Error reconstruyendo el JSON: " + err);
+                    e.preventDefault();
+                }
+            });
         }
 
         document.addEventListener("DOMContentLoaded", function () {
-            setupJsonLoader("word_json_file", "word_json_text");
-            setupJsonLoader("excel_json_file", "excel_json_text");
+            setupJsonEditor("word");
+            setupJsonEditor("excel");
         });
     </script>
 </body>

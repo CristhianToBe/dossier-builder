@@ -1,0 +1,157 @@
+{
+  "1. Identificación del investigado y del expediente": {
+    "11. Número de identificación": 860002964,
+    "12. DV": 4,
+    "13. No. Expediente": 202581690100006530,
+    "14. Nombre o razón social": "BANCO DE BOGOTA",
+    "15. Fecha vencimiento": "03/10/2026",
+    "16. Fecha vencimiento plazo para declarar": "03/10/2023",
+    "17. No. Decreto de plazos": "DECRETO 2487 DE 2022",
+    "18. Fecha decreto": "16/12/2022",
+    "20. Concepto": "Gravamen a los Movimientos Financieros",
+    "21. Año": 2023,
+    "22. Período": 38
+  },
+  "2. Declaraciones presentadas": {
+    "38. No. Declaración": {
+      "Inicial": 4108604633020,
+      "1a. Corrección": "",
+      "2a. Corrección": "",
+      "3a. Corrección": ""
+    },
+    "39. Fecha presentación": {
+      "Inicial": "03/10/2023",
+      "1a. Corrección": "",
+      "2a. Corrección": "",
+      "3a. Corrección": ""
+    },
+    "40. Oportuna": {
+      "Inicial": "SI",
+      "1a. Corrección": "",
+      "2a. Corrección": "",
+      "3a. Corrección": ""
+    },
+    "41. Válida": {
+      "Inicial": "SI",
+      "1a. Corrección": "",
+      "2a. Corrección": "",
+      "3a. Corrección": ""
+    }
+  },
+  "3. Declaración de renta del respectivo año gravable (IVA o Retefuente)": {
+    "42. No. Declaración inicial": "",
+    "43. Fecha presentación": ""
+  },
+  "4. Liquidación oficial de corrección": {
+    "45. No. Liquidación oficial": "N/A",
+    "46. Fecha": "N/A",
+    "47. No. Declaración que sustituye": "N/A",
+    "49. Fecha declaración": "N/A"
+  },
+  "5. Solicitud de devolución y/o compensación": {
+    "49. No. Solicitud devolución": "N/A",
+    "50. Fecha solicitud": "N/A",
+    "51. No. Resolución devolución": "N/A",
+    "53. Fecha resolución": "N/A"
+  },
+  "6. Devolución saldo a favor renta (IVA o Retefuente)": {
+    "54. No. Solicitud devolución": "N/A",
+    "55. Fecha solicitud": "N/A",
+    "56. No. Resolución devolución": "N/A",
+    "57. Fecha declaración": "N/A"
+  },
+  "7. Beneficio de auditoría": {
+    "58. Declaración con beneficio de auditoría": "N/A",
+    "59. Justificación": "N/A",
+    "60. Meses para firmeza": "N/A"
+  },
+  "8. Control otras investigaciones": {
+    "61. Existe otra investigación por el mismo período": "NO",
+    "62. Número de expediente": "",
+    "63. Fecha de apertura": ""
+  },
+  "9. Control firmeza de la declaración": {
+    "64. Por fecha de presentación declaración": "03/10/2026",
+    "65. Por solicitud saldo a favor": "N/A",
+    "66. Por beneficio de auditoría": "N/A",
+    "67. Por vencimiento decl. Renta": "N/A",
+    "68. Liquid. Ofic. Corrección": "N/A",
+    "69. Renta Pérdidas fiscales": "N/A"
+  },
+  "10. Verificación de competencia": {
+    "70. Corresponde a la jurisdicción": "SI",
+    "71. Contribuyente trasladado recientemente de/a otra Dirección Seccional": "NO",
+    "72. Fecha traslado": "N/A",
+    "73. Antigüedad en la jurisdicción menor a 1 año": "NO",
+    "74. Contribuyente cambio de calificación GC": "NO",
+    "75. Fecha cambio calificación": "N/A"
+  },
+  "11. Verificaciones formales": {
+    "82. Formulario/Autoadhesivo concuerda con SIE": "SI",
+    "83. Declaración presentada por no obligado (Art. 594-2 ET)": "N/A",
+    "84. Identificación del declarante correcta (Art. 580 ET)": "SI",
+    "85. Declaración firmada por obligado (Art. 580 ET)": "SI",
+    "86. Representante legal firma inscrito en RUT": "SI",
+    "87. Liquidador inscrito en RUT": "N/A",
+    "88. Interventor Supersociedades/Superfinanciera inscrito en RUT": "N/A",
+    "89. Declaración firmada por Revisor Fiscal o Contador (Art. 580 ET)": "SI",
+    "90. Revisor Fiscal/Contador inscrito en RUT": "SI",
+    "91. Revisor Fiscal/Contador sancionado o inhabilitado": "NO",
+    "92. Firmas coinciden con SIE": "SI",
+    "93. Declaración inicial oportuna": "SI",
+    "94. Declaración contiene factores necesarios (Art. 580 ET)": "SI",
+    "95. Sanción por extemporaneidad correcta (Art. 641,642 ET)": "N/A",
+    "96. Actividad económica correcta": "SI",
+    "97. Obligado a declarar electrónicamente (Art. 579-2 ET)": "SI",
+    "98. Declaración presentada electrónicamente": "SI",
+    "99. Error aritmético (Art. 697 ET)": "NO",
+    "100. Corrección presentada en término legal (Art. 588 ET)": "N/A",
+    "101. Sanción por corrección correcta (Art. 644 ET)": "N/A",
+    "102. Imputación del saldo a favor": "N/A",
+    "103. Saldo a favor concuerda periodo anterior": "N/A",
+    "104. Declaración con saldo a pagar": "SI",
+    "105. Declaración con saldo a favor": "NO",
+    "106. Corrección presentada en término legal (Art. 589 ET)": "N/A",
+    "107. Corrección ajustada Art. 589 ET": "N/A",
+    "108. Declaración en término de revisión (Art. 714, 689-1 ET)": "N/A",
+    "109. Declaración válida": "SI",
+    "110. Cumple requisitos Art. 596 ET (Renta)": "N/A",
+    "111. Cumple requisitos Art. 599 ET (Ingresos y Patrimonio)": "N/A",
+    "112. Cumple requisitos Art. 602 ET (Ventas)": "N/A",
+    "113. Cumple requisitos Art. 606 ET (Retención)": "N/A",
+    "114. Firma corresponde contribuyente/rep. legal": "SI",
+    "115. Se solicitó copia auténtica (Litográfica)": "N/A",
+    "116. Renglones debidamente diligenciados": "N/A",
+    "117. Se imprimió declaración desde DIAN": "N/A"
+  },
+  "12. Datos Auto": {
+    "FECHA DEL EXPEDIENTE": "03-06-2025",
+    "DIRECCIÓN": "CL 36 7 47 P 15",
+    "MUNICIPIO": "Bogotá D.C.",
+    "DEPARTAMENTO": "Bogotá D.C.",
+    "N_FORMULARIO": 4108604633020,
+    "N_INTERNO": 91900081226544,
+    "N_A_APERTURA": 13229001630106,
+    "PROGRAMA": "GM - Gravamen A Los Movimientos Financieros",
+    "N_A_VERIFICACION": 2025000010002526,
+    "FN_A_VERIFICACION": "24-07-2025",
+    "MAIL_INVESTIGADO": "NOTIFICAR@BANCODEBOGOTA.COM.CO"
+  },
+  "13. Datos Informe parcial": {
+    "REVISOR": "Martha Consuelo Alfonso Pena",
+    "PAIS": "COLOMBIA",
+    "ID AUDITOR": 1015477939,
+    "NOMBRE AUDITOR": "Cristhian Leonardo Torres Bernal",
+    "TIPO ID INVESTIGADO": "NIT",
+    "FORM_NIT_PRESENTACION": 14948520239,
+    "DATE_NIT_PRESENTACION": "18-09-2023",
+    "CIIU PRINCIPAL": 6412,
+    "CIIU_P_DESCRIPCION": "Bancos comerciales"
+  },
+  "14. Plan de auditoria": {
+    "L_ADMINISTRATIVO": "Nivel Central",
+    "COD_L_ADMIN": 0,
+    "DEPENDENCIA": "Coord. de Fiscalización y Liquidación Tributaria Intensiva del Sector Servicios y Op. Financieras.",
+    "COD_DEPE": 485
+  }
+}
