@@ -7,8 +7,9 @@
         body { font-family: sans-serif; margin: 20px; }
         fieldset { margin-bottom: 20px; padding: 15px; }
         label { display: block; margin-top: 8px; }
-        input[type="text"], select { width: 100%; padding: 4px; }
+        input[type="text"], select, textarea { width: 100%; padding: 4px; box-sizing: border-box; }
         button { margin-top: 12px; padding: 6px 12px; }
+        textarea { font-family: monospace; }
     </style>
 </head>
 <body>
@@ -29,14 +30,16 @@
                 {% endfor %}
             </select>
 
-            <label>JSON de datos (data_json):</label>
-            <input type="file" name="word_json" accept=".json" required>
-
             <label>Mapping (mapping_json):</label>
             <input type="text" name="word_mapping" value="{{ word_mapping_default }}">
 
             <label>Salida Word (output_docx):</label>
             <input type="text" name="word_out" value="{{ word_out_default }}">
+
+            <label>JSON de datos (selecciona archivo y edita abajo):</label>
+            <input type="file" id="word_json_file" accept=".json">
+            <textarea name="word_json_text" id="word_json_text" rows="10"
+                      placeholder="Aquí se mostrará el JSON seleccionado; puedes editarlo antes de generar.">{{ word_json_default|default:"" }}</textarea>
 
             <button type="submit">Generar Word</button>
         </form>
@@ -57,17 +60,59 @@
                 {% endfor %}
             </select>
 
-            <label>JSON de datos (data_json):</label>
-            <input type="file" name="excel_json" accept=".json" required>
-
             <label>Mapping (mapping_json):</label>
             <input type="text" name="excel_mapping" value="{{ excel_mapping_default }}">
 
             <label>Salida Excel (output_excel):</label>
             <input type="text" name="excel_out" value="{{ excel_out_default }}">
 
+            <label>JSON de datos (selecciona archivo y edita abajo):</label>
+            <input type="file" id="excel_json_file" accept=".json">
+            <textarea name="excel_json_text" id="excel_json_text" rows="10"
+                      placeholder="Aquí se mostrará el JSON seleccionado; puedes editarlo antes de generar.">{{ excel_json_default|default:"" }}</textarea>
+
             <button type="submit">Generar Excel</button>
         </form>
     </fieldset>
+
+    <script>
+        function setupJsonLoader(fileInputId, textareaId) {
+            const fileInput = document.getElementById(fileInputId);
+            const textarea = document.getElementById(textareaId);
+            if (!fileInput || !textarea) return;
+
+            fileInput.addEventListener("change", function () {
+                const file = this.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const raw = e.target.result;
+                        let formatted = raw;
+
+                        // Intentamos formatear como JSON bonito si es válido
+                        try {
+                            const parsed = JSON.parse(raw);
+                            formatted = JSON.stringify(parsed, null, 2);
+                        } catch (err) {
+                            // Si no es JSON válido, dejamos el texto tal cual
+                        }
+
+                        textarea.value = formatted;
+                        textarea.focus();
+                    } catch (err) {
+                        alert("No se pudo leer el archivo JSON: " + err);
+                    }
+                };
+                reader.readAsText(file, "utf-8");
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            setupJsonLoader("word_json_file", "word_json_text");
+            setupJsonLoader("excel_json_file", "excel_json_text");
+        });
+    </script>
 </body>
 </html>

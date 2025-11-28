@@ -1,5 +1,9 @@
 from pathlib import Path
 import sys
+import os
+import uuid
+import json
+
 
 from django.conf import settings
 from django.http import FileResponse, HttpResponse
@@ -33,61 +37,71 @@ def resolve_path(path_str: str, base: Path | None = None) -> Path:
         return p
     return (base or REPO_ROOT) / p
 
-def index(request):
-    plantillas_dir = REPO_ROOT / "plantillas"
+def save_json_from_text(json_text: str, prefix: str) -> str:
+    """
+    Valida el JSON y lo guarda en un archivo temporal dentro de MEDIA_ROOT.
+    Devuelve la ruta absoluta del archivo.
+    """
+    # Validar JSON
+    try:
+        parsed = json.loads(json_text)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"JSON inválido: {e}")
 
-    # Buscar plantillas disponibles
+    media_root = Path(settings.MEDIA_ROOT)
+    media_root.mkdir(parents=True, exist_ok=True)
+
+    filename = f"{prefix}_{uuid.uuid4().hex}.json"
+    path = media_root / filename
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(parsed, f, ensure_ascii=False, indent=2)
+
+    return str(path)
+
+
+def index(request):
+    plantillas_dir = REPO_ROOT / "Plantillas"
+
     word_files = sorted(plantillas_dir.glob("*.docx"))
     excel_files = sorted(plantillas_dir.glob("*.xlsx"))
 
-    # Defaults actuales (los que antes estaban hardcodeados)
-    word_base_default = REPO_ROOT / "plantillas" / "1839 - Informe parcial .docx"
-    word_json_default = Path(
-        r"C:\Users\ctorresb\OneDrive - Direccion de Impuestos y Aduanas Nacionales de Colombia\CASOS\ACTIVOS\ITAU COLOMBIA S A\ITAU COLOMBIA S A 2020\R - 2020\Auditoria\data.json"
-    )
+    word_base_default = REPO_ROOT / "Plantillas" / "1839 - Informe parcial .docx"
     word_mapping_default = REPO_ROOT / "configs" / "1839_mapping.json"
     word_out_default = Path(
         r"C:\Users\ctorresb\OneDrive - Direccion de Impuestos y Aduanas Nacionales de Colombia\CASOS\ACTIVOS\ITAU COLOMBIA S A\ITAU COLOMBIA S A 2020\R - 2020\Auditoria\F1839 - Informe parcial.docx"
     )
 
-    excel_base_default = REPO_ROOT / "plantillas" / "1811 - VERIFICACION REQUISITOS FORMALES.xlsx"
-    excel_json_default = Path(
-        r"C:\Users\ctorresb\OneDrive - Direccion de Impuestos y Aduanas Nacionales de Colombia\CASOS\ACTIVOS\BANCO SERFINANZA S.A\R - 2024\Auditoria\data.json"
-    )
+    excel_base_default = REPO_ROOT / "Plantillas" / "1811 - VERIFICACION REQUISITOS FORMALES.xlsx"
     excel_mapping_default = REPO_ROOT / "configs" / "1811_mapping.json"
     excel_out_default = Path(
         r"C:\Users\ctorresb\OneDrive - Direccion de Impuestos y Aduanas Nacionales de Colombia\CASOS\ACTIVOS\BANCO SERFINANZA S.A\R - 2024\Auditoria\F1811.xlsx"
     )
 
     context = {
-        # defaults como strings
         "word_base_default": str(word_base_default.relative_to(REPO_ROOT)),
-        "word_json_default": str(word_json_default),
         "word_mapping_default": str(word_mapping_default),
         "word_out_default": str(word_out_default),
 
         "excel_base_default": str(excel_base_default.relative_to(REPO_ROOT)),
-        "excel_json_default": str(excel_json_default),
         "excel_mapping_default": str(excel_mapping_default),
         "excel_out_default": str(excel_out_default),
 
-        # listas de plantillas para los selects
+        # 👇 JSONs empiezan vacíos; el usuario carga archivo y se llena el textarea
+        "word_json_default": "",
+        "excel_json_default": "",
+
         "word_templates": [
-            {
-                "value": str(p.relative_to(REPO_ROOT)),  # ej: "plantillas/1839 - Informe parcial .docx"
-                "name": p.name,                          # solo el nombre de archivo
-            }
+            {"value": str(p.relative_to(REPO_ROOT)), "name": p.name}
             for p in word_files
         ],
         "excel_templates": [
-            {
-                "value": str(p.relative_to(REPO_ROOT)),
-                "name": p.name,
-            }
+            {"value": str(p.relative_to(REPO_ROOT)), "name": p.name}
             for p in excel_files
         ],
     }
     return render(request, "builder/index.html", context)
+
 
 
 def run_word_view(request):
@@ -98,12 +112,14 @@ def run_word_view(request):
     mapping_file = resolve_path(request.POST.get("word_mapping"), REPO_ROOT)
     output_docx = resolve_path(request.POST.get("word_out"), None)
 
-    # ✅ JSON SUBIDO DESDE EXPLORADOR
-    json_file = request.FILES.get("word_json")
-    if not json_file:
-        return HttpResponse("No se subió ningún archivo JSON.")
+    json_text = request.POST.get("word_json_text", "").strip()
+    if not json_text:
+        return HttpResponse("No se recibió contenido JSON para Word.", status=400)
 
-    data_json_path = save_uploaded_file(json_file)
+    try:
+        data_json_path = save_json_from_text(json_text, "word")
+    except ValueError as e:
+        return HttpResponse(str(e), status=400)
 
     run_word(
         str(base_docx),
@@ -130,12 +146,14 @@ def run_excel_view(request):
     mapping_file = resolve_path(request.POST.get("excel_mapping"), REPO_ROOT)
     output_excel = resolve_path(request.POST.get("excel_out"), None)
 
-    # ✅ JSON SUBIDO DESDE EXPLORADOR
-    json_file = request.FILES.get("excel_json")
-    if not json_file:
-        return HttpResponse("No se subió ningún archivo JSON.")
+    json_text = request.POST.get("excel_json_text", "").strip()
+    if not json_text:
+        return HttpResponse("No se recibió contenido JSON para Excel.", status=400)
 
-    data_json_path = save_uploaded_file(json_file)
+    try:
+        data_json_path = save_json_from_text(json_text, "excel")
+    except ValueError as e:
+        return HttpResponse(str(e), status=400)
 
     run_excel(
         str(base_excel),
