@@ -3,18 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <title>Dossier Builder</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        fieldset { margin-bottom: 20px; padding: 15px; }
+        label { display: block; margin-top: 8px; }
+        input[type="text"], select { width: 100%; padding: 4px; }
+        button { margin-top: 12px; padding: 6px 12px; }
+    </style>
 </head>
 <body>
     <h1>Dossier Builder</h1>
 
-    <form method="post" action="{% url 'run_word' %}">
-        {% csrf_token %}
-        <button type="submit">Generar Word</button>
-    </form>
+    <fieldset>
+        <legend><strong>Generar Word</strong></legend>
+        <form method="post" enctype="multipart/form-data" action="{% url 'run_word' %}">
+            {% csrf_token %}
 
-    <form method="post" action="{% url 'run_excel' %}">
-        {% csrf_token %}
-        <button type="submit">Generar Excel</button>
-    </form>
+            <label>Plantilla Word (base_docx):</label>
+            <select name="word_base">
+                {% for tpl in word_templates %}
+                    <option value="{{ tpl.value }}"
+                        {% if tpl.value == word_base_default %}selected{% endif %}>
+                        {{ tpl.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label>JSON de datos (data_json):</label>
+            <input type="file" name="word_json" accept=".json" required>
+
+            <label>Mapping (mapping_json):</label>
+            <input type="text" name="word_mapping" value="{{ word_mapping_default }}">
+
+            <label>Salida Word (output_docx):</label>
+            <input type="text" name="word_out" value="{{ word_out_default }}">
+
+            <button type="submit">Generar Word</button>
+        </form>
+    </fieldset>
+
+    <fieldset>
+        <legend><strong>Generar Excel</strong></legend>
+        <form method="post" enctype="multipart/form-data" action="{% url 'run_excel' %}">
+            {% csrf_token %}
+
+            <label>Plantilla Excel (base_excel):</label>
+            <select name="excel_base">
+                {% for tpl in excel_templates %}
+                    <option value="{{ tpl.value }}"
+                        {% if tpl.value == excel_base_default %}selected{% endif %}>
+                        {{ tpl.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label>JSON de datos (data_json):</label>
+            <input type="file" name="excel_json" accept=".json" required>
+
+            <label>Mapping (mapping_json):</label>
+            <input type="text" name="excel_mapping" value="{{ excel_mapping_default }}">
+
+            <label>Salida Excel (output_excel):</label>
+            <input type="text" name="excel_out" value="{{ excel_out_default }}">
+
+            <button type="submit">Generar Excel</button>
+        </form>
+    </fieldset>
 </body>
 </html>
