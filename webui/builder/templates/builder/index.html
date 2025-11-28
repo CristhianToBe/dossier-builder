@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dossier Builder</title>
+</head>
+<body>
+    <h1>Dossier Builder</h1>
+
+    <form method="post" action="{% url 'run_word' %}">
+        {% csrf_token %}
+        <button type="submit">Generar Word</button>
+    </form>
+
+    <form method="post" action="{% url 'run_excel' %}">
+        {% csrf_token %}
+        <button type="submit">Generar Excel</button>
+    </form>
+</body>
+</html>
