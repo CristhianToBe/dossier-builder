@@ -1,6 +1,8 @@
 from pathlib import Path
 import sys
 import os
+import io
+import zipfile
 import uuid
 import json
 
@@ -110,7 +112,7 @@ def run_word_view(request):
     if not out_name:
         return HttpResponse("Debes indicar el nombre del archivo Word de salida.", status=400)
 
-    # Carpeta interna donde se generan los Word
+    # Carpeta interna temporal para Word
     outputs_dir = Path(settings.MEDIA_ROOT) / "word_outputs"
     outputs_dir.mkdir(parents=True, exist_ok=True)
     output_docx = outputs_dir / out_name
@@ -124,6 +126,7 @@ def run_word_view(request):
     except ValueError as e:
         return HttpResponse(str(e), status=400)
 
+    # Generar el Word
     run_word(
         str(base_docx),
         data_json_path,
@@ -131,14 +134,42 @@ def run_word_view(request):
         str(output_docx),
     )
 
-    if output_docx.exists():
-        return FileResponse(
-            open(output_docx, "rb"),
-            as_attachment=True,
-            filename=output_docx.name,
-        )
+    if not output_docx.exists():
+        return HttpResponse("Se ejecutó la generación, pero no se encontró el archivo de salida.", status=500)
 
-    return HttpResponse("Se ejecutó la generación, pero no se encontró el archivo de salida.")
+    # 📦 Crear ZIP en memoria con el DOCX y el JSON
+    zip_buffer = io.BytesIO()
+    zip_name = f"{output_docx.stem}_paquete.zip"
+
+    try:
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            # Documento generado
+            zf.write(output_docx, arcname=output_docx.name)
+            # JSON usado para generarlo
+            zf.write(data_json_path, arcname="data.json")
+
+        zip_buffer.seek(0)
+    finally:
+        # 🧹 Limpiar temporales
+        try:
+            if output_docx.exists():
+                os.remove(output_docx)
+        except OSError:
+            pass
+
+        try:
+            tmp_json = Path(data_json_path)
+            if tmp_json.exists():
+                os.remove(tmp_json)
+        except OSError:
+            pass
+
+    # Devolver ZIP como descarga
+    return FileResponse(
+        zip_buffer,
+        as_attachment=True,
+        filename=zip_name,
+    )
 
 
 def run_excel_view(request):
@@ -165,6 +196,7 @@ def run_excel_view(request):
     except ValueError as e:
         return HttpResponse(str(e), status=400)
 
+    # Generar el Excel
     run_excel(
         str(base_excel),
         data_json_path,
@@ -172,12 +204,36 @@ def run_excel_view(request):
         str(output_excel),
     )
 
-    if output_excel.exists():
-        return FileResponse(
-            open(output_excel, "rb"),
-            as_attachment=True,
-            filename=output_excel.name,
-        )
+    if not output_excel.exists():
+        return HttpResponse("Se ejecutó la generación, pero no se encontró el archivo de salida.", status=500)
 
-    return HttpResponse("Se ejecutó la generación, pero no se encontró el archivo de salida.")
+    # 📦 Crear ZIP en memoria con el XLSX y el JSON
+    zip_buffer = io.BytesIO()
+    zip_name = f"{output_excel.stem}_paquete.zip"
 
+    try:
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.write(output_excel, arcname=output_excel.name)
+            zf.write(data_json_path, arcname="data.json")
+
+        zip_buffer.seek(0)
+    finally:
+        # 🧹 Limpiar temporales
+        try:
+            if output_excel.exists():
+                os.remove(output_excel)
+        except OSError:
+            pass
+
+        try:
+            tmp_json = Path(data_json_path)
+            if tmp_json.exists():
+                os.remove(tmp_json)
+        except OSError:
+            pass
+
+    return FileResponse(
+        zip_buffer,
+        as_attachment=True,
+        filename=zip_name,
+    )
