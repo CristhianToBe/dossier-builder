@@ -14,6 +14,8 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
 from pathlib import Path
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET, require_POST
 
 # 👉 AÑADIMOS LA RAÍZ DEL REPO AL PYTHONPATH
 # BASE_DIR = carpeta "webui" (donde está manage.py)
@@ -71,6 +73,7 @@ def index(request):
     word_files = sorted(plantillas_dir.glob("*.docx"))
     excel_files = sorted(plantillas_dir.glob("*.xlsx"))
     mapping_files = sorted(configs_dir.glob("*.json"))
+    json_base_files = sorted(plantillas_dir.glob("*.json"))
 
     word_base_default = REPO_ROOT / "Plantillas" / "1839 - Informe parcial .docx"
     word_mapping_default = REPO_ROOT / "configs" / "1839_mapping.json"
@@ -87,6 +90,10 @@ def index(request):
         "excel_base_default": str(excel_base_default.relative_to(REPO_ROOT)),
         "excel_mapping_default": str(excel_mapping_default.relative_to(REPO_ROOT)),
         "excel_out_name_default": "F1811.xlsx",
+
+        "json_base_templates": [
+        {"value": str(p.relative_to(REPO_ROOT)), "name": p.name}
+        for p in json_base_files],
 
         "word_templates": [
             {"value": str(p.relative_to(REPO_ROOT)), "name": p.name}
@@ -106,6 +113,47 @@ def index(request):
         "excel_json_default": "",
     }
     return render(request, "builder/index.html", context)
+
+
+@require_POST
+def upload_template_view(request):
+    """
+    Sube una plantilla (Word/Excel) y la guarda en REPO_ROOT/Plantillas.
+    """
+    file = request.FILES.get("template_file")
+    if not file:
+        return HttpResponse("No se recibió ningún archivo de plantilla.", status=400)
+
+    # Validar extensión
+    allowed_exts = {".docx", ".xlsx"}
+    suffix = Path(file.name).suffix.lower()
+    if suffix not in allowed_exts:
+        return HttpResponse(
+            "Solo se permiten plantillas .docx o .xlsx.",
+            status=400,
+        )
+
+    # Carpeta Plantillas
+    plantillas_dir = REPO_ROOT / "Plantillas"
+    plantillas_dir.mkdir(parents=True, exist_ok=True)
+
+    # Si se envió un nombre opcional, usarlo; si no, usar el nombre original
+    custom_name = request.POST.get("template_name", "").strip()
+    if custom_name:
+        # asegurar que tenga extensión correcta
+        if not custom_name.lower().endswith(suffix):
+            custom_name += suffix
+        dest_path = plantillas_dir / custom_name
+    else:
+        dest_path = plantillas_dir / file.name
+
+    # Guardar archivo
+    with open(dest_path, "wb+") as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
+
+    # Después de subir, redirigir al index (la nueva plantilla aparecerá en los combos)
+    return redirect("index")
 
 
 def run_word_view(request):
@@ -244,3 +292,71 @@ def run_excel_view(request):
         as_attachment=True,
         filename=zip_name,
     )
+
+def _blank_leaves(obj):
+    """
+    Devuelve una copia del objeto donde todos los valores hoja se reemplazan por "".
+    Mantiene la estructura (dicts/listas) intacta.
+    """
+    if isinstance(obj, dict):
+        return {k: _blank_leaves(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_blank_leaves(v) for v in obj]
+    else:
+        return ""
+
+
+@require_POST
+def create_json_view(request):
+    """
+    Recibe el JSON ya editado (como texto) desde el formulario y lo devuelve como archivo descargable.
+    """
+    json_text = request.POST.get("json_text", "").strip()
+    if not json_text:
+        return HttpResponse("No se recibió JSON para generar.", status=400)
+
+    try:
+        data = json.loads(json_text)
+    except json.JSONDecodeError as e:
+        return HttpResponse(f"JSON inválido: {e}", status=400)
+
+    out_name = request.POST.get("json_out_name", "").strip()
+    if not out_name:
+        out_name = "data_blank.json"
+    if not out_name.lower().endswith(".json"):
+        out_name += ".json"
+
+    buffer = io.BytesIO()
+    buffer.write(json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8"))
+    buffer.seek(0)
+
+    return FileResponse(
+        buffer,
+        as_attachment=True,
+        filename=out_name,
+        content_type="application/json",
+    )
+
+
+@require_GET
+def get_json_template_view(request):
+    """
+    Devuelve el JSON base (con todas las hojas en blanco) para usarlo en el editor de la sección de creación.
+    """
+    template_rel = request.GET.get("json_template", "").strip()
+    if not template_rel:
+        return JsonResponse({"error": "No se recibió json_template."}, status=400)
+
+    template_path = resolve_path(template_rel, REPO_ROOT)
+    if not template_path.exists():
+        return JsonResponse({"error": "El JSON base no existe."}, status=404)
+
+    try:
+        with open(template_path, "r", encoding="utf-8") as f:
+            base_data = json.load(f)
+    except Exception as e:
+        return JsonResponse({"error": f"No se pudo leer el JSON base: {e}"}, status=500)
+
+    blank_data = _blank_leaves(base_data)
+    # devolvemos solo el objeto, no un wrapper
+    return JsonResponse(blank_data, safe=False)

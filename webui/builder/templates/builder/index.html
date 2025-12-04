@@ -20,6 +20,46 @@
 <body>
     <h1>Dossier Builder</h1>
 
+    <fieldset>
+        <legend><strong>Crear JSON vacío desde plantilla</strong></legend>
+        <form id="json_creator_form" method="post" action="{% url 'create_json' %}">
+            {% csrf_token %}
+
+            <label>JSON base en carpeta Plantillas:</label>
+            <select name="json_template" id="json_template_select" required>
+                {% if json_base_templates %}
+                    {% for j in json_base_templates %}
+                        <option value="{{ j.value }}">{{ j.name }}</option>
+                    {% endfor %}
+                {% else %}
+                    <option value="">(No hay JSON base en Plantillas)</option>
+                {% endif %}
+            </select>
+
+            <label>Nombre del JSON de salida:</label>
+            <input type="text" name="json_out_name" placeholder="Ej: ITAU_2020_blank.json">
+
+            <div class="json-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ruta (path)</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="json_creator_fields">
+                        <!-- filas generadas por JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- aquí se guarda el JSON reconstruido antes de enviar -->
+            <input type="hidden" name="json_text" id="json_creator_text_hidden">
+
+            <button type="submit">Generar JSON vacío</button>
+        </form>
+    </fieldset>
+
     <!-- WORD -->
     <fieldset>
         <legend><strong>Generar Word</strong></legend>
@@ -126,6 +166,21 @@
         </form>
     </fieldset>
 
+    <fieldset>
+        <legend><strong>Subir nueva plantilla</strong></legend>
+        <form method="post" enctype="multipart/form-data" action="{% url 'upload_template' %}">
+            {% csrf_token %}
+
+            <label>Archivo de plantilla (.docx o .xlsx):</label>
+            <input type="file" name="template_file" accept=".docx,.xlsx" required>
+
+            <label>Nombre opcional (sin ruta):</label>
+            <input type="text" name="template_name" placeholder="Ej: 1839 - Informe parcial v2.docx">
+
+            <button type="submit">Subir plantilla a carpeta Plantillas</button>
+        </form>
+    </fieldset>
+
     <script>
         // Aplana un objeto JSON en pares {path, value} usando '||' (mismo criterio que tus mappings)
         function flattenJson(obj, prefix = "") {
@@ -195,10 +250,7 @@
 
                         const pairs = flattenJson(parsed);
 
-                        // Limpiar tabla
                         tbody.innerHTML = "";
-
-                        // Crear filas
                         for (const pair of pairs) {
                             const tr = document.createElement("tr");
 
@@ -219,7 +271,6 @@
                             tbody.appendChild(tr);
                         }
 
-                        // también guardamos el JSON original por si quieres usarlo en el futuro
                         hidden.value = JSON.stringify(parsed, null, 2);
                     } catch (err) {
                         console.error(err);
@@ -254,9 +305,98 @@
             });
         }
 
+        function setupJsonCreator() {
+            const select = document.getElementById("json_template_select");
+            const tbody = document.getElementById("json_creator_fields");
+            const hidden = document.getElementById("json_creator_text_hidden");
+            const form = document.getElementById("json_creator_form");
+
+            if (!select || !tbody || !hidden || !form) return;
+
+            // Cuando cambias de plantilla base
+            select.addEventListener("change", function () {
+                const value = select.value;
+                if (!value) {
+                    tbody.innerHTML = "";
+                    hidden.value = "";
+                    return;
+                }
+
+                fetch("{% url 'get_json_template' %}?json_template=" + encodeURIComponent(value))
+                    .then((resp) => {
+                        if (!resp.ok) {
+                            throw new Error("Error al cargar JSON base");
+                        }
+                        return resp.json();
+                    })
+                    .then((data) => {
+                        const pairs = flattenJson(data);
+                        tbody.innerHTML = "";
+
+                        for (const pair of pairs) {
+                            const tr = document.createElement("tr");
+
+                            const tdPath = document.createElement("td");
+                            tdPath.className = "path-cell";
+                            tdPath.textContent = pair.path;
+
+                            const tdValue = document.createElement("td");
+                            tdValue.className = "value-cell";
+                            const input = document.createElement("input");
+                            input.type = "text";
+                            input.value = pair.value; // viene "" desde _blank_leaves
+                            input.dataset.path = pair.path;
+                            tdValue.appendChild(input);
+
+                            tr.appendChild(tdPath);
+                            tr.appendChild(tdValue);
+                            tbody.appendChild(tr);
+                        }
+
+                        // dejamos hidden vacío; se llenará al enviar
+                        hidden.value = "";
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        alert("No se pudo cargar el JSON base: " + err);
+                    });
+            });
+
+            // Al enviar el formulario, reconstruir JSON desde los campos
+            form.addEventListener("submit", function (e) {
+                const inputs = tbody.querySelectorAll("input[data-path]");
+                if (!inputs.length) {
+                    alert("No hay campos JSON cargados para generar.");
+                    e.preventDefault();
+                    return;
+                }
+
+                const pairs = [];
+                inputs.forEach((input) => {
+                    pairs.push({ path: input.dataset.path, value: input.value });
+                });
+
+                try {
+                    const obj = unflattenJson(pairs);
+                    hidden.value = JSON.stringify(obj, null, 2);
+                } catch (err) {
+                    console.error(err);
+                    alert("Error reconstruyendo el JSON: " + err);
+                    e.preventDefault();
+                }
+            });
+
+            // Disparar una carga inicial con el primer JSON de la lista (si hay)
+            if (select.value) {
+                const event = new Event("change");
+                select.dispatchEvent(event);
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
             setupJsonEditor("word");
             setupJsonEditor("excel");
+            setupJsonCreator();
         });
     </script>
 </body>
