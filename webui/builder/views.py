@@ -66,9 +66,11 @@ def save_json_from_text(json_text: str, prefix: str) -> str:
 
 def index(request):
     plantillas_dir = REPO_ROOT / "Plantillas"
+    configs_dir = REPO_ROOT / "configs"
 
     word_files = sorted(plantillas_dir.glob("*.docx"))
     excel_files = sorted(plantillas_dir.glob("*.xlsx"))
+    mapping_files = sorted(configs_dir.glob("*.json"))
 
     word_base_default = REPO_ROOT / "Plantillas" / "1839 - Informe parcial .docx"
     word_mapping_default = REPO_ROOT / "configs" / "1839_mapping.json"
@@ -78,11 +80,12 @@ def index(request):
 
     context = {
         "word_base_default": str(word_base_default.relative_to(REPO_ROOT)),
-        "word_mapping_default": str(word_mapping_default),
+        # 👇 ahora guardamos el default como ruta relativa (para que matchee con el value del <option>)
+        "word_mapping_default": str(word_mapping_default.relative_to(REPO_ROOT)),
         "word_out_name_default": "F1839 - Informe parcial.docx",
 
         "excel_base_default": str(excel_base_default.relative_to(REPO_ROOT)),
-        "excel_mapping_default": str(excel_mapping_default),
+        "excel_mapping_default": str(excel_mapping_default.relative_to(REPO_ROOT)),
         "excel_out_name_default": "F1811.xlsx",
 
         "word_templates": [
@@ -93,12 +96,16 @@ def index(request):
             {"value": str(p.relative_to(REPO_ROOT)), "name": p.name}
             for p in excel_files
         ],
+        # 👇 lista única de mappings para ambos (Word/Excel)
+        "mapping_templates": [
+            {"value": str(p.relative_to(REPO_ROOT)), "name": p.name}
+            for p in mapping_files
+        ],
 
         "word_json_default": "",
         "excel_json_default": "",
     }
     return render(request, "builder/index.html", context)
-
 
 
 def run_word_view(request):

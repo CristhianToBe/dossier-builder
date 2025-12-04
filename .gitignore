@@ -40,6 +40,7 @@ salidas/
 configs/
 plantillas/
 *.bat
+.deps_installed
 
 # Django media / uploads (archivos temporales)
 webui/uploads/

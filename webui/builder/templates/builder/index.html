@@ -37,7 +37,14 @@
             </select>
 
             <label>Mapping (mapping_json):</label>
-            <input type="text" name="word_mapping" value="{{ word_mapping_default }}">
+            <select name="word_mapping">
+                {% for m in mapping_templates %}
+                    <option value="{{ m.value }}"
+                        {% if m.value == word_mapping_default %}selected{% endif %}>
+                        {{ m.name }}
+                    </option>
+                {% endfor %}
+            </select>
 
             <label>Nombre archivo Word:</label>
             <input type="text" name="word_out_name" value="{{ word_out_name_default }}">
@@ -84,7 +91,14 @@
             </select>
 
             <label>Mapping (mapping_json):</label>
-            <input type="text" name="excel_mapping" value="{{ excel_mapping_default }}">
+            <select name="excel_mapping">
+                {% for m in mapping_templates %}
+                    <option value="{{ m.value }}"
+                        {% if m.value == excel_mapping_default %}selected{% endif %}>
+                        {{ m.name }}
+                    </option>
+                {% endfor %}
+            </select>
 
             <label>Nombre archivo Excel:</label>
             <input type="text" name="excel_out_name" value="{{ excel_out_name_default }}">
