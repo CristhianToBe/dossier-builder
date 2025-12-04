@@ -360,3 +360,45 @@ def get_json_template_view(request):
     blank_data = _blank_leaves(base_data)
     # devolvemos solo el objeto, no un wrapper
     return JsonResponse(blank_data, safe=False)
+
+@require_POST
+def create_mapping_view(request):
+    """
+    Recibe un JSON de mapping ya armado desde el front y lo guarda en configs/,
+    devolviéndolo además como descarga.
+    """
+    mapping_text = request.POST.get("mapping_text", "").strip()
+    mapping_name = request.POST.get("mapping_name", "").strip()
+
+    if not mapping_text:
+        return HttpResponse("No se recibió contenido de mapping.", status=400)
+
+    try:
+        mapping_data = json.loads(mapping_text)
+    except json.JSONDecodeError as e:
+        return HttpResponse(f"Mapping JSON inválido: {e}", status=400)
+
+    if not mapping_name:
+        mapping_name = "mapping.json"
+    if not mapping_name.lower().endswith(".json"):
+        mapping_name += ".json"
+
+    configs_dir = REPO_ROOT / "configs"
+    configs_dir.mkdir(parents=True, exist_ok=True)
+    file_path = configs_dir / mapping_name
+
+    # Guardar en disco
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(mapping_data, f, ensure_ascii=False, indent=2)
+
+    # Devolver como descarga
+    buffer = io.BytesIO()
+    buffer.write(json.dumps(mapping_data, ensure_ascii=False, indent=2).encode("utf-8"))
+    buffer.seek(0)
+
+    return FileResponse(
+        buffer,
+        as_attachment=True,
+        filename=mapping_name,
+        content_type="application/json",
+    )

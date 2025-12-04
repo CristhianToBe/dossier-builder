@@ -15,6 +15,19 @@
         .json-table { max-height: 280px; overflow: auto; display: block; }
         .path-cell { width: 40%; font-family: monospace; }
         .value-cell input { width: 100%; box-sizing: border-box; }
+        .json-editor-subbox {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #f8f8f8;
+        }
+
+        .json-editor-subbox legend {
+            font-size: 14px;
+            font-weight: bold;
+            padding: 0 6px;
+        }
     </style>
 </head>
 <body>
@@ -25,35 +38,46 @@
         <form id="json_creator_form" method="post" action="{% url 'create_json' %}">
             {% csrf_token %}
 
+            <!-- Parte 1: selección de plantilla y nombre de salida -->
             <label>JSON base en carpeta Plantillas:</label>
             <select name="json_template" id="json_template_select" required>
-                {% if json_base_templates %}
-                    {% for j in json_base_templates %}
-                        <option value="{{ j.value }}">{{ j.name }}</option>
-                    {% endfor %}
-                {% else %}
-                    <option value="">(No hay JSON base en Plantillas)</option>
-                {% endif %}
+                {% for j in json_base_templates %}
+                    <option value="{{ j.value }}">{{ j.name }}</option>
+                {% endfor %}
             </select>
 
             <label>Nombre del JSON de salida:</label>
             <input type="text" name="json_out_name" placeholder="Ej: ITAU_2020_blank.json">
 
-            <div class="json-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ruta (path)</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="json_creator_fields">
-                        <!-- filas generadas por JS -->
-                    </tbody>
-                </table>
-            </div>
+            <!-- 🔽 Parte 2: SUBCUADRO de edición del JSON -->
+            <fieldset class="json-editor-subbox">
+                <legend>Datos del caso (edición de JSON)</legend>
 
-            <!-- aquí se guarda el JSON reconstruido antes de enviar -->
+                <div>
+                    <label>Sección nivel 1:</label>
+                    <select id="json_lvl1_select"></select>
+
+                    <label>Sección nivel 2:</label>
+                    <select id="json_lvl2_select"></select>
+
+                    <label>Sección nivel 3:</label>
+                    <select id="json_lvl3_select"></select>
+                </div>
+
+                <div class="json-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ruta (path)</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="json_creator_fields"></tbody>
+                    </table>
+                </div>
+            </fieldset>
+            <!-- 🔼 FIN SUBCUADRO -->
+
             <input type="hidden" name="json_text" id="json_creator_text_hidden">
 
             <button type="submit">Generar JSON vacío</button>
@@ -90,24 +114,35 @@
             <input type="text" name="word_out_name" value="{{ word_out_name_default }}">
 
             <label>JSON de datos (selecciona archivo y edita campos):</label>
-            <input type="file" id="word_json_file" accept=".json">
+            <input type="file" name="word_json_file" id="word_json_file" accept=".json">
 
-            <!-- aquí se pintan los campos del JSON -->
-            <div class="json-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ruta (path)</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="word_json_fields">
-                        <!-- filas generadas por JS -->
-                    </tbody>
-                </table>
-            </div>
+            <fieldset class="json-editor-subbox">
+                <legend>Datos del caso (edición de JSON)</legend>
 
-            <!-- aquí se guardará el JSON reconstruido antes de enviar -->
+                <div>
+                    <label>Sección nivel 1:</label>
+                    <select id="word_lvl1_select"></select>
+
+                    <label>Sección nivel 2:</label>
+                    <select id="word_lvl2_select"></select>
+
+                    <label>Sección nivel 3:</label>
+                    <select id="word_lvl3_select"></select>
+                </div>
+
+                <div class="json-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ruta (path)</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="word_json_fields"></tbody>
+                    </table>
+                </div>
+            </fieldset>
+
             <input type="hidden" name="word_json_text" id="word_json_text_hidden">
 
             <button type="submit">Generar Word</button>
@@ -144,21 +179,34 @@
             <input type="text" name="excel_out_name" value="{{ excel_out_name_default }}">
 
             <label>JSON de datos (selecciona archivo y edita campos):</label>
-            <input type="file" id="excel_json_file" accept=".json">
+            <input type="file" name="excel_json_file" id="excel_json_file" accept=".json">
 
-            <div class="json-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ruta (path)</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="excel_json_fields">
-                        <!-- filas generadas por JS -->
-                    </tbody>
-                </table>
-            </div>
+            <fieldset class="json-editor-subbox">
+                <legend>Datos del caso (edición de JSON)</legend>
+
+                <div>
+                    <label>Sección nivel 1:</label>
+                    <select id="excel_lvl1_select"></select>
+
+                    <label>Sección nivel 2:</label>
+                    <select id="excel_lvl2_select"></select>
+
+                    <label>Sección nivel 3:</label>
+                    <select id="excel_lvl3_select"></select>
+                </div>
+
+                <div class="json-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ruta (path)</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="excel_json_fields"></tbody>
+                    </table>
+                </div>
+            </fieldset>
 
             <input type="hidden" name="excel_json_text" id="excel_json_text_hidden">
 
@@ -178,6 +226,67 @@
             <input type="text" name="template_name" placeholder="Ej: 1839 - Informe parcial v2.docx">
 
             <button type="submit">Subir plantilla a carpeta Plantillas</button>
+        </form>
+    </fieldset>
+
+    <fieldset>
+        <legend><strong>Crear mapping para configs</strong></legend>
+
+        <form id="mapping_creator_form" method="post" action="{% url 'create_mapping' %}">
+            {% csrf_token %}
+
+            <label>Tipo de documento:</label>
+            <select id="mapping_type" name="mapping_type">
+                <option value="word">Word</option>
+                <option value="excel">Excel</option>
+            </select>
+
+            <label>Nombre del archivo mapping (.json):</label>
+            <input type="text" id="mapping_name" name="mapping_name"
+                placeholder="Ej: 1839_mapping.json">
+
+            <label>Hoja de Excel (solo si aplica):</label>
+            <input type="text" id="mapping_sheet" name="mapping_sheet"
+                placeholder="Ej: Verificacion Requisitos-declara">
+
+            <label>JSON base (para obtener las rutas):</label>
+            <select id="mapping_json_template">
+                {% if json_base_templates %}
+                    {% for j in json_base_templates %}
+                        <option value="{{ j.value }}">{{ j.name }}</option>
+                    {% endfor %}
+                {% else %}
+                    <option value="">(No hay JSON base en Plantillas)</option>
+                {% endif %}
+            </select>
+
+            <fieldset class="json-editor-subbox">
+                <legend>Filas de mapping (identificador → ruta JSON)</legend>
+
+                <button type="button" id="add_mapping_row_btn">
+                    Añadir fila
+                </button>
+
+                <div class="json-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Identificador (Word/Excel)</th>
+                                <th>Nivel 1 JSON</th>
+                                <th>Resto de la ruta JSON</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="mapping_rows_body">
+                            <!-- filas generadas por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </fieldset>
+
+            <input type="hidden" name="mapping_text" id="mapping_text_hidden">
+
+            <button type="submit">Generar mapping y guardar en configs</button>
         </form>
     </fieldset>
 
@@ -230,9 +339,143 @@
             const hidden = document.getElementById(prefix + "_json_text_hidden");
             const form = document.getElementById(prefix + "_form");
 
-            if (!fileInput || !tbody || !hidden || !form) return;
+            const lvl1 = document.getElementById(prefix + "_lvl1_select");
+            const lvl2 = document.getElementById(prefix + "_lvl2_select");
+            const lvl3 = document.getElementById(prefix + "_lvl3_select");
 
-            // Cuando se selecciona un archivo JSON
+            if (!fileInput || !tbody || !hidden || !form || !lvl1 || !lvl2 || !lvl3) return;
+
+            // mapa path -> valor
+            let pairsMap = {};
+            let allPaths = [];
+
+            function getTokensForLevel(level, filters) {
+                const set = new Set();
+                for (const path of allPaths) {
+                    const parts = path.split("||");
+                    if (parts.length <= level) continue;
+
+                    let ok = true;
+                    for (let i = 0; i < filters.length; i++) {
+                        if (filters[i] && parts[i] !== filters[i]) {
+                            ok = false;
+                            break;
+                        }
+                    }
+                    if (!ok) continue;
+                    set.add(parts[level]);
+                }
+                return Array.from(set);
+            }
+
+            function buildLevelOptions() {
+                const lvl1Tokens = getTokensForLevel(0, []);
+                lvl1.innerHTML = "";
+                const opt1 = document.createElement("option");
+                opt1.value = "";
+                opt1.textContent = "— Todos —";
+                lvl1.appendChild(opt1);
+                lvl1Tokens.forEach(t => {
+                    const o = document.createElement("option");
+                    o.value = t;
+                    o.textContent = t;
+                    lvl1.appendChild(o);
+                });
+
+                lvl2.innerHTML = "";
+                const opt2 = document.createElement("option");
+                opt2.value = "";
+                opt2.textContent = "— Todos —";
+                lvl2.appendChild(opt2);
+
+                lvl3.innerHTML = "";
+                const opt3 = document.createElement("option");
+                opt3.value = "";
+                opt3.textContent = "— Todos —";
+                lvl3.appendChild(opt3);
+            }
+
+            function updateLevel2() {
+                const v1 = lvl1.value || null;
+                const tokens = getTokensForLevel(1, [v1]);
+
+                lvl2.innerHTML = "";
+                const opt = document.createElement("option");
+                opt.value = "";
+                opt.textContent = "— Todos —";
+                lvl2.appendChild(opt);
+
+                tokens.forEach(t => {
+                    const o = document.createElement("option");
+                    o.value = t;
+                    o.textContent = t;
+                    lvl2.appendChild(o);
+                });
+
+                lvl3.innerHTML = "";
+                const opt3 = document.createElement("option");
+                opt3.value = "";
+                opt3.textContent = "— Todos —";
+                lvl3.appendChild(opt3);
+            }
+
+            function updateLevel3() {
+                const v1 = lvl1.value || null;
+                const v2 = lvl2.value || null;
+                const tokens = getTokensForLevel(2, [v1, v2]);
+
+                lvl3.innerHTML = "";
+                const opt = document.createElement("option");
+                opt.value = "";
+                opt.textContent = "— Todos —";
+                lvl3.appendChild(opt);
+
+                tokens.forEach(t => {
+                    const o = document.createElement("option");
+                    o.value = t;
+                    o.textContent = t;
+                    lvl3.appendChild(o);
+                });
+            }
+
+            function renderFields() {
+                const v1 = lvl1.value || null;
+                const v2 = lvl2.value || null;
+                const v3 = lvl3.value || null;
+
+                tbody.innerHTML = "";
+
+                for (const path of allPaths) {
+                    const parts = path.split("||");
+
+                    if (v1 && parts[0] !== v1) continue;
+                    if (v2 && parts[1] !== v2) continue;
+                    if (v3 && parts[2] !== v3) continue;
+
+                    const tr = document.createElement("tr");
+
+                    const tdPath = document.createElement("td");
+                    tdPath.className = "path-cell";
+                    tdPath.textContent = path;
+
+                    const tdValue = document.createElement("td");
+                    tdValue.className = "value-cell";
+                    const input = document.createElement("input");
+                    input.type = "text";
+                    input.value = pairsMap[path] ?? "";
+                    input.dataset.path = path;
+                    input.addEventListener("input", function () {
+                        pairsMap[path] = this.value;
+                    });
+
+                    tdValue.appendChild(input);
+                    tr.appendChild(tdPath);
+                    tr.appendChild(tdValue);
+                    tbody.appendChild(tr);
+                }
+            }
+
+            // cargar JSON desde el archivo
             fileInput.addEventListener("change", function () {
                 const file = this.files[0];
                 if (!file) return;
@@ -249,28 +492,17 @@
                         }
 
                         const pairs = flattenJson(parsed);
+                        pairsMap = {};
+                        allPaths = [];
+                        pairs.forEach(p => {
+                            pairsMap[p.path] = p.value;
+                            allPaths.push(p.path);
+                        });
 
-                        tbody.innerHTML = "";
-                        for (const pair of pairs) {
-                            const tr = document.createElement("tr");
+                        buildLevelOptions();
+                        renderFields();
 
-                            const tdPath = document.createElement("td");
-                            tdPath.className = "path-cell";
-                            tdPath.textContent = pair.path;
-
-                            const tdValue = document.createElement("td");
-                            tdValue.className = "value-cell";
-                            const input = document.createElement("input");
-                            input.type = "text";
-                            input.value = pair.value;
-                            input.dataset.path = pair.path;
-                            tdValue.appendChild(input);
-
-                            tr.appendChild(tdPath);
-                            tr.appendChild(tdValue);
-                            tbody.appendChild(tr);
-                        }
-
+                        // guardamos una primera versión por si acaso
                         hidden.value = JSON.stringify(parsed, null, 2);
                     } catch (err) {
                         console.error(err);
@@ -280,19 +512,34 @@
                 reader.readAsText(file, "utf-8");
             });
 
-            // Antes de enviar el formulario, reconstruimos el JSON desde las filas
+            // eventos de niveles
+            lvl1.addEventListener("change", function () {
+                updateLevel2();
+                updateLevel3();
+                renderFields();
+            });
+
+            lvl2.addEventListener("change", function () {
+                updateLevel3();
+                renderFields();
+            });
+
+            lvl3.addEventListener("change", function () {
+                renderFields();
+            });
+
+            // al enviar el formulario: reconstruir TODO el JSON desde pairsMap
             form.addEventListener("submit", function (e) {
-                const inputs = tbody.querySelectorAll("input[data-path]");
-                if (!inputs.length) {
+                if (!allPaths.length) {
                     alert("No hay campos JSON cargados para " + prefix.toUpperCase() + ".");
                     e.preventDefault();
                     return;
                 }
 
-                const pairs = [];
-                inputs.forEach((input) => {
-                    pairs.push({ path: input.dataset.path, value: input.value });
-                });
+                const pairs = Object.keys(pairsMap).map(path => ({
+                    path: path,
+                    value: pairsMap[path],
+                }));
 
                 try {
                     const obj = unflattenJson(pairs);
@@ -306,19 +553,185 @@
         }
 
         function setupJsonCreator() {
-            const select = document.getElementById("json_template_select");
+            const selectTemplate = document.getElementById("json_template_select");
             const tbody = document.getElementById("json_creator_fields");
             const hidden = document.getElementById("json_creator_text_hidden");
             const form = document.getElementById("json_creator_form");
 
-            if (!select || !tbody || !hidden || !form) return;
+            const lvl1 = document.getElementById("json_lvl1_select");
+            const lvl2 = document.getElementById("json_lvl2_select");
+            const lvl3 = document.getElementById("json_lvl3_select");
 
-            // Cuando cambias de plantilla base
-            select.addEventListener("change", function () {
-                const value = select.value;
+            if (!selectTemplate || !tbody || !hidden || !form || !lvl1 || !lvl2 || !lvl3) return;
+
+            // Mapa path -> valor (toda la info vive aquí)
+            let pairsMap = {};  // { "A||B||C": "valor" }
+            let allPaths = [];  // lista de paths
+
+            function buildLevelOptions() {
+                // Llenar nivel 1, 2, 3 según paths y selección actual
+                const paths = allPaths;
+
+                // Helper para sacar tokens por nivel filtrando
+                function getTokens(level, filterTokens) {
+                    const set = new Set();
+                    for (const path of paths) {
+                        const parts = path.split("||");
+                        if (parts.length <= level) continue;
+
+                        let ok = true;
+                        for (let i = 0; i < filterTokens.length; i++) {
+                            if (filterTokens[i] && parts[i] !== filterTokens[i]) {
+                                ok = false;
+                                break;
+                            }
+                        }
+                        if (!ok) continue;
+                        set.add(parts[level]);
+                    }
+                    return Array.from(set);
+                }
+
+                // Nivel 1
+                const lvl1Tokens = getTokens(0, []);
+                lvl1.innerHTML = "";
+                const opt1 = document.createElement("option");
+                opt1.value = "";
+                opt1.textContent = "— Todos —";
+                lvl1.appendChild(opt1);
+                lvl1Tokens.forEach(t => {
+                    const o = document.createElement("option");
+                    o.value = t;
+                    o.textContent = t;
+                    lvl1.appendChild(o);
+                });
+
+                // Reset niveles inferiores
+                lvl2.innerHTML = "";
+                const opt2 = document.createElement("option");
+                opt2.value = "";
+                opt2.textContent = "— Todos —";
+                lvl2.appendChild(opt2);
+
+                lvl3.innerHTML = "";
+                const opt3 = document.createElement("option");
+                opt3.value = "";
+                opt3.textContent = "— Todos —";
+                lvl3.appendChild(opt3);
+            }
+
+            function updateLevel2() {
+                const v1 = lvl1.value || null;
+                const lvl2Tokens = getTokensForLevel(1, [v1]);
+
+                lvl2.innerHTML = "";
+                const opt = document.createElement("option");
+                opt.value = "";
+                opt.textContent = "— Todos —";
+                lvl2.appendChild(opt);
+
+                lvl2Tokens.forEach(t => {
+                    const o = document.createElement("option");
+                    o.value = t;
+                    o.textContent = t;
+                    lvl2.appendChild(o);
+                });
+
+                // al cambiar nivel 1, reinicia nivel 3
+                lvl3.innerHTML = "";
+                const opt3 = document.createElement("option");
+                opt3.value = "";
+                opt3.textContent = "— Todos —";
+                lvl3.appendChild(opt3);
+            }
+
+            function updateLevel3() {
+                const v1 = lvl1.value || null;
+                const v2 = lvl2.value || null;
+                const lvl3Tokens = getTokensForLevel(2, [v1, v2]);
+
+                lvl3.innerHTML = "";
+                const opt = document.createElement("option");
+                opt.value = "";
+                opt.textContent = "— Todos —";
+                lvl3.appendChild(opt);
+
+                lvl3Tokens.forEach(t => {
+                    const o = document.createElement("option");
+                    o.value = t;
+                    o.textContent = t;
+                    lvl3.appendChild(o);
+                });
+            }
+
+            function getTokensForLevel(level, filters) {
+                const set = new Set();
+                for (const path of allPaths) {
+                    const parts = path.split("||");
+                    if (parts.length <= level) continue;
+
+                    let ok = true;
+                    for (let i = 0; i < filters.length; i++) {
+                        if (filters[i] && parts[i] !== filters[i]) {
+                            ok = false;
+                            break;
+                        }
+                    }
+                    if (!ok) continue;
+                    set.add(parts[level]);
+                }
+                return Array.from(set);
+            }
+
+            function renderFields() {
+                const v1 = lvl1.value || null;
+                const v2 = lvl2.value || null;
+                const v3 = lvl3.value || null;
+
+                tbody.innerHTML = "";
+
+                for (const path of allPaths) {
+                    const parts = path.split("||");
+
+                    if (v1 && parts[0] !== v1) continue;
+                    if (v2 && parts[1] !== v2) continue;
+                    if (v3 && parts[2] !== v3) continue;
+
+                    // Mostrar solo los paths que matchean filtros
+                    const tr = document.createElement("tr");
+
+                    const tdPath = document.createElement("td");
+                    tdPath.className = "path-cell";
+                    tdPath.textContent = path;
+
+                    const tdValue = document.createElement("td");
+                    tdValue.className = "value-cell";
+                    const input = document.createElement("input");
+                    input.type = "text";
+                    input.value = pairsMap[path] ?? "";
+                    input.dataset.path = path;
+                    input.addEventListener("input", function () {
+                        pairsMap[path] = this.value;
+                    });
+
+                    tdValue.appendChild(input);
+                    tr.appendChild(tdPath);
+                    tr.appendChild(tdValue);
+                    tbody.appendChild(tr);
+                }
+            }
+
+            // Cuando cambias de JSON base
+            selectTemplate.addEventListener("change", function () {
+                const value = selectTemplate.value;
                 if (!value) {
                     tbody.innerHTML = "";
                     hidden.value = "";
+                    pairsMap = {};
+                    allPaths = [];
+                    lvl1.innerHTML = "";
+                    lvl2.innerHTML = "";
+                    lvl3.innerHTML = "";
                     return;
                 }
 
@@ -331,30 +744,15 @@
                     })
                     .then((data) => {
                         const pairs = flattenJson(data);
-                        tbody.innerHTML = "";
+                        pairsMap = {};
+                        allPaths = [];
+                        pairs.forEach(p => {
+                            pairsMap[p.path] = p.value;
+                            allPaths.push(p.path);
+                        });
 
-                        for (const pair of pairs) {
-                            const tr = document.createElement("tr");
-
-                            const tdPath = document.createElement("td");
-                            tdPath.className = "path-cell";
-                            tdPath.textContent = pair.path;
-
-                            const tdValue = document.createElement("td");
-                            tdValue.className = "value-cell";
-                            const input = document.createElement("input");
-                            input.type = "text";
-                            input.value = pair.value; // viene "" desde _blank_leaves
-                            input.dataset.path = pair.path;
-                            tdValue.appendChild(input);
-
-                            tr.appendChild(tdPath);
-                            tr.appendChild(tdValue);
-                            tbody.appendChild(tr);
-                        }
-
-                        // dejamos hidden vacío; se llenará al enviar
-                        hidden.value = "";
+                        buildLevelOptions();
+                        renderFields();
                     })
                     .catch((err) => {
                         console.error(err);
@@ -362,19 +760,34 @@
                     });
             });
 
-            // Al enviar el formulario, reconstruir JSON desde los campos
+            // Eventos de los niveles
+            lvl1.addEventListener("change", function () {
+                updateLevel2();
+                updateLevel3();
+                renderFields();
+            });
+
+            lvl2.addEventListener("change", function () {
+                updateLevel3();
+                renderFields();
+            });
+
+            lvl3.addEventListener("change", function () {
+                renderFields();
+            });
+
+            // Al enviar, reconstruir TODO el JSON a partir de pairsMap
             form.addEventListener("submit", function (e) {
-                const inputs = tbody.querySelectorAll("input[data-path]");
-                if (!inputs.length) {
+                if (!allPaths.length) {
                     alert("No hay campos JSON cargados para generar.");
                     e.preventDefault();
                     return;
                 }
 
-                const pairs = [];
-                inputs.forEach((input) => {
-                    pairs.push({ path: input.dataset.path, value: input.value });
-                });
+                const pairs = Object.keys(pairsMap).map(path => ({
+                    path: path,
+                    value: pairsMap[path],
+                }));
 
                 try {
                     const obj = unflattenJson(pairs);
@@ -386,10 +799,298 @@
                 }
             });
 
-            // Disparar una carga inicial con el primer JSON de la lista (si hay)
-            if (select.value) {
-                const event = new Event("change");
-                select.dispatchEvent(event);
+            // Cargar automáticamente el primer JSON base si existe
+            if (selectTemplate.value) {
+                const ev = new Event("change");
+                selectTemplate.dispatchEvent(ev);
+            }
+
+            // Helpers internos usan allPaths; decláralos después de allPaths
+            function getTokensForLevel(level, filters) {
+                const set = new Set();
+                for (const path of allPaths) {
+                    const parts = path.split("||");
+                    if (parts.length <= level) continue;
+
+                    let ok = true;
+                    for (let i = 0; i < filters.length; i++) {
+                        if (filters[i] && parts[i] !== filters[i]) {
+                            ok = false;
+                            break;
+                        }
+                    }
+                    if (!ok) continue;
+                    set.add(parts[level]);
+                }
+                return Array.from(set);
+            }
+
+            function buildLevelOptions() {
+                const lvl1Tokens = getTokensForLevel(0, []);
+                lvl1.innerHTML = "";
+                const opt1 = document.createElement("option");
+                opt1.value = "";
+                opt1.textContent = "— Todos —";
+                lvl1.appendChild(opt1);
+                lvl1Tokens.forEach(t => {
+                    const o = document.createElement("option");
+                    o.value = t;
+                    o.textContent = t;
+                    lvl1.appendChild(o);
+                });
+
+                lvl2.innerHTML = "";
+                const opt2 = document.createElement("option");
+                opt2.value = "";
+                opt2.textContent = "— Todos —";
+                lvl2.appendChild(opt2);
+
+                lvl3.innerHTML = "";
+                const opt3 = document.createElement("option");
+                opt3.value = "";
+                opt3.textContent = "— Todos —";
+                lvl3.appendChild(opt3);
+            }
+        }
+        
+        function setupMappingCreator() {
+            const jsonSelect = document.getElementById("mapping_json_template");
+            const tbody = document.getElementById("mapping_rows_body");
+            const addBtn = document.getElementById("add_mapping_row_btn");
+            const hidden = document.getElementById("mapping_text_hidden");
+            const form = document.getElementById("mapping_creator_form");
+            const typeSelect = document.getElementById("mapping_type");
+            const sheetInput = document.getElementById("mapping_sheet");
+            const nameInput = document.getElementById("mapping_name");
+
+            if (!jsonSelect || !tbody || !addBtn || !hidden || !form) return;
+
+            let allPaths = [];          // paths completos "A||B||C"
+            let firstLevelTokens = [];  // ["1. Identificación...", "2. Declaraciones...", ...]
+
+            function computeFirstLevelTokens() {
+                const set = new Set();
+                allPaths.forEach(p => {
+                    const parts = p.split("||");
+                    if (parts[0]) set.add(parts[0]);
+                });
+                firstLevelTokens = Array.from(set);
+            }
+
+            function getRestTokensFor(lvl1) {
+                const set = new Set();
+                allPaths.forEach(p => {
+                    const parts = p.split("||");
+                    if (!parts.length) return;
+                    if (parts[0] !== lvl1) return;
+                    const rest = parts.slice(1).join("||");
+                    if (rest) set.add(rest);
+                });
+                return Array.from(set);
+            }
+
+            function buildLevel1Select(selectedLvl1) {
+                const sel = document.createElement("select");
+                sel.className = "mapping-lvl1-select";
+
+                const optEmpty = document.createElement("option");
+                optEmpty.value = "";
+                optEmpty.textContent = "— Nivel 1 —";
+                sel.appendChild(optEmpty);
+
+                firstLevelTokens.forEach(tok => {
+                    const o = document.createElement("option");
+                    o.value = tok;
+                    o.textContent = tok;
+                    if (tok === selectedLvl1) o.selected = true;
+                    sel.appendChild(o);
+                });
+
+                return sel;
+            }
+
+            function buildRestSelect(lvl1, selectedRest) {
+                const sel = document.createElement("select");
+                sel.className = "mapping-rest-select";
+
+                const optRoot = document.createElement("option");
+                optRoot.value = "";
+                optRoot.textContent = "— (raíz de nivel 1) —";
+                sel.appendChild(optRoot);
+
+                if (lvl1) {
+                    const rests = getRestTokensFor(lvl1);
+                    rests.forEach(r => {
+                        const o = document.createElement("option");
+                        o.value = r;
+                        o.textContent = r;
+                        if (r === selectedRest) o.selected = true;
+                        sel.appendChild(o);
+                    });
+                }
+
+                return sel;
+            }
+
+            function splitPath(fullPath) {
+                if (!fullPath) return { lvl1: "", rest: "" };
+                const parts = fullPath.split("||");
+                return {
+                    lvl1: parts[0] || "",
+                    rest: parts.slice(1).join("||") || ""
+                };
+            }
+
+            function addRow(keyVal = "", fullPathVal = "") {
+                const tr = document.createElement("tr");
+
+                const tdKey = document.createElement("td");
+                const keyInput = document.createElement("input");
+                keyInput.type = "text";
+                keyInput.placeholder = "[EXPEDIENTE] o A8";
+                keyInput.value = keyVal;
+                tdKey.appendChild(keyInput);
+
+                const { lvl1, rest } = splitPath(fullPathVal);
+
+                const tdLvl1 = document.createElement("td");
+                const lvl1Select = buildLevel1Select(lvl1);
+                tdLvl1.appendChild(lvl1Select);
+
+                const tdRest = document.createElement("td");
+                let restSelect = buildRestSelect(lvl1Select.value, rest);
+                tdRest.appendChild(restSelect);
+
+                // cuando cambia nivel 1, refrescar la lista de resto
+                lvl1Select.addEventListener("change", function () {
+                    const newLvl1 = this.value;
+                    const currentRest = "";  // al cambiar nivel 1, arrancamos sin resto
+                    const newRestSelect = buildRestSelect(newLvl1, currentRest);
+                    tdRest.innerHTML = "";
+                    tdRest.appendChild(newRestSelect);
+                });
+
+                const tdDel = document.createElement("td");
+                const delBtn = document.createElement("button");
+                delBtn.type = "button";
+                delBtn.textContent = "✕";
+                delBtn.addEventListener("click", function () {
+                    tr.remove();
+                });
+                tdDel.appendChild(delBtn);
+
+                tr.appendChild(tdKey);
+                tr.appendChild(tdLvl1);
+                tr.appendChild(tdRest);
+                tr.appendChild(tdDel);
+                tbody.appendChild(tr);
+            }
+
+            // Cuando cambias de JSON base: cargamos paths y reiniciamos filas
+            jsonSelect.addEventListener("change", function () {
+                const value = jsonSelect.value;
+                if (!value) {
+                    allPaths = [];
+                    firstLevelTokens = [];
+                    tbody.innerHTML = "";
+                    return;
+                }
+
+                fetch("{% url 'get_json_template' %}?json_template=" + encodeURIComponent(value))
+                    .then(resp => {
+                        if (!resp.ok) throw new Error("Error al cargar JSON base");
+                        return resp.json();
+                    })
+                    .then(data => {
+                        const pairs = flattenJson(data);
+                        allPaths = pairs.map(p => p.path);
+                        computeFirstLevelTokens();
+
+                        // limpiamos filas anteriores y dejamos solo una nueva vacía
+                        tbody.innerHTML = "";
+                        addRow();
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert("No se pudo cargar el JSON base: " + err);
+                    });
+            });
+
+            // Botón para añadir fila
+            addBtn.addEventListener("click", function () {
+                if (!allPaths.length) {
+                    alert("Primero selecciona un JSON base para obtener las rutas.");
+                    return;
+                }
+                addRow();
+            });
+
+            // habilitar/deshabilitar hoja según tipo
+            function updateSheetEnabled() {
+                if (typeSelect.value === "excel") {
+                    sheetInput.disabled = false;
+                } else {
+                    sheetInput.disabled = true;
+                    sheetInput.value = "";
+                }
+            }
+            typeSelect.addEventListener("change", updateSheetEnabled);
+            updateSheetEnabled();
+
+            // Submit: construir el mapping JSON completo
+            form.addEventListener("submit", function (e) {
+                const rows = Array.from(tbody.querySelectorAll("tr"));
+                if (!rows.length) {
+                    alert("Agrega al menos una fila de mapping.");
+                    e.preventDefault();
+                    return;
+                }
+
+                const mapping = {};
+                rows.forEach(tr => {
+                    const keyInput = tr.querySelector("td:nth-child(1) input");
+                    const lvl1Select = tr.querySelector("td:nth-child(2) select.mapping-lvl1-select");
+                    const restSelect = tr.querySelector("td:nth-child(3) select.mapping-rest-select");
+
+                    const k = keyInput.value.trim();
+                    const lvl1 = lvl1Select ? lvl1Select.value.trim() : "";
+                    const rest = restSelect ? restSelect.value.trim() : "";
+
+                    if (!k || !lvl1) return;
+
+                    const fullPath = rest ? (lvl1 + "||" + rest) : lvl1;
+                    mapping[k] = fullPath;
+                });
+
+                if (Object.keys(mapping).length === 0) {
+                    alert("No hay filas de mapping válidas (identificador y ruta).");
+                    e.preventDefault();
+                    return;
+                }
+
+                const tipo = typeSelect.value || "word";
+                const sheet = sheetInput.value.trim();
+
+                const mappingObj = {
+                    "Tipo de documento": tipo,
+                    "mapeo": mapping,
+                };
+                if (tipo === "excel" && sheet) {
+                    mappingObj["sheet"] = sheet;
+                }
+
+                if (!nameInput.value.trim()) {
+                    nameInput.value = (tipo === "word" ? "word_mapping.json" : "excel_mapping.json");
+                }
+
+                hidden.value = JSON.stringify(mappingObj, null, 2);
+                // el backend se encarga de guardar en configs y devolver la descarga
+            });
+
+            // cargar automáticamente rutas del primer JSON base si existe
+            if (jsonSelect.value) {
+                const ev = new Event("change");
+                jsonSelect.dispatchEvent(ev);
             }
         }
 
@@ -397,6 +1098,7 @@
             setupJsonEditor("word");
             setupJsonEditor("excel");
             setupJsonCreator();
+            setupMappingCreator(); 
         });
     </script>
 </body>
