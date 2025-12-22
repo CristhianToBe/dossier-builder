@@ -2,7 +2,23 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dossier Builder</title>
+    <div style="
+        width: 100%;
+        padding: 14px;
+        margin-bottom: 25px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background-color: #f4f6f8;
+        color: #003366;
+        text-align: center;
+    ">
+        <h1 style="margin: 0; font-size: 22px;">
+            Mi Repositorio a la Medida
+        </h1>
+        <p style="margin: 4px 0 0; font-size: 13px; color: #555;">
+            Herramienta de automatización documental
+        </p>
+    </div>
     <style>
         body { font-family: sans-serif; margin: 20px; }
         fieldset { margin-bottom: 20px; padding: 15px; }
@@ -81,6 +97,82 @@
             <input type="hidden" name="json_text" id="json_creator_text_hidden">
 
             <button type="submit">Generar JSON vacío</button>
+        </form>
+    </fieldset>
+
+    <fieldset>
+        <legend><strong>Subir nueva plantilla</strong></legend>
+        <form method="post" enctype="multipart/form-data" action="{% url 'upload_template' %}">
+            {% csrf_token %}
+
+            <label>Archivo de plantilla (.docx o .xlsx):</label>
+            <input type="file" name="template_file" accept=".docx,.xlsx" required>
+
+            <label>Nombre opcional (sin ruta):</label>
+            <input type="text" name="template_name" placeholder="Ej: 1839 - Informe parcial v2.docx">
+
+            <button type="submit">Subir plantilla a carpeta Plantillas</button>
+        </form>
+    </fieldset>
+
+    <fieldset>
+        <legend><strong>Crear mapping para configs</strong></legend>
+
+        <form id="mapping_creator_form" method="post" action="{% url 'create_mapping' %}">
+            {% csrf_token %}
+
+            <label>Tipo de documento:</label>
+            <select id="mapping_type" name="mapping_type">
+                <option value="word">Word</option>
+                <option value="excel">Excel</option>
+            </select>
+
+            <label>Nombre del archivo mapping (.json):</label>
+            <input type="text" id="mapping_name" name="mapping_name"
+                placeholder="Ej: 1839_mapping.json">
+
+            <label>Hoja de Excel (solo si aplica):</label>
+            <input type="text" id="mapping_sheet" name="mapping_sheet"
+                placeholder="Ej: Verificacion Requisitos-declara">
+
+            <label>JSON base (para obtener las rutas):</label>
+            <select id="mapping_json_template">
+                {% if json_base_templates %}
+                    {% for j in json_base_templates %}
+                        <option value="{{ j.value }}">{{ j.name }}</option>
+                    {% endfor %}
+                {% else %}
+                    <option value="">(No hay JSON base en Plantillas)</option>
+                {% endif %}
+            </select>
+
+            <fieldset class="json-editor-subbox">
+                <legend>Filas de mapping (identificador → ruta JSON)</legend>
+
+                <button type="button" id="add_mapping_row_btn">
+                    Añadir fila
+                </button>
+
+                <div class="json-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Identificador (Word/Excel)</th>
+                                <th>Nivel 1 JSON</th>
+                                <th>Resto de la ruta JSON</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="mapping_rows_body">
+                            <!-- filas generadas por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </fieldset>
+
+            <input type="hidden" name="mapping_text" id="mapping_text_hidden">
+
+            <button type="submit">Generar mapping y guardar en configs</button>
         </form>
     </fieldset>
 
@@ -214,81 +306,6 @@
         </form>
     </fieldset>
 
-    <fieldset>
-        <legend><strong>Subir nueva plantilla</strong></legend>
-        <form method="post" enctype="multipart/form-data" action="{% url 'upload_template' %}">
-            {% csrf_token %}
-
-            <label>Archivo de plantilla (.docx o .xlsx):</label>
-            <input type="file" name="template_file" accept=".docx,.xlsx" required>
-
-            <label>Nombre opcional (sin ruta):</label>
-            <input type="text" name="template_name" placeholder="Ej: 1839 - Informe parcial v2.docx">
-
-            <button type="submit">Subir plantilla a carpeta Plantillas</button>
-        </form>
-    </fieldset>
-
-    <fieldset>
-        <legend><strong>Crear mapping para configs</strong></legend>
-
-        <form id="mapping_creator_form" method="post" action="{% url 'create_mapping' %}">
-            {% csrf_token %}
-
-            <label>Tipo de documento:</label>
-            <select id="mapping_type" name="mapping_type">
-                <option value="word">Word</option>
-                <option value="excel">Excel</option>
-            </select>
-
-            <label>Nombre del archivo mapping (.json):</label>
-            <input type="text" id="mapping_name" name="mapping_name"
-                placeholder="Ej: 1839_mapping.json">
-
-            <label>Hoja de Excel (solo si aplica):</label>
-            <input type="text" id="mapping_sheet" name="mapping_sheet"
-                placeholder="Ej: Verificacion Requisitos-declara">
-
-            <label>JSON base (para obtener las rutas):</label>
-            <select id="mapping_json_template">
-                {% if json_base_templates %}
-                    {% for j in json_base_templates %}
-                        <option value="{{ j.value }}">{{ j.name }}</option>
-                    {% endfor %}
-                {% else %}
-                    <option value="">(No hay JSON base en Plantillas)</option>
-                {% endif %}
-            </select>
-
-            <fieldset class="json-editor-subbox">
-                <legend>Filas de mapping (identificador → ruta JSON)</legend>
-
-                <button type="button" id="add_mapping_row_btn">
-                    Añadir fila
-                </button>
-
-                <div class="json-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Identificador (Word/Excel)</th>
-                                <th>Nivel 1 JSON</th>
-                                <th>Resto de la ruta JSON</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="mapping_rows_body">
-                            <!-- filas generadas por JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </fieldset>
-
-            <input type="hidden" name="mapping_text" id="mapping_text_hidden">
-
-            <button type="submit">Generar mapping y guardar en configs</button>
-        </form>
-    </fieldset>
 
     <script>
         // Aplana un objeto JSON en pares {path, value} usando '||' (mismo criterio que tus mappings)
